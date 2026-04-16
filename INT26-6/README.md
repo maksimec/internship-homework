@@ -4,7 +4,7 @@
 
 ## Структура репозиторію
 
-\`\`\`text
+```text
 INT26-6/
 ├── README.md
 ├── scripts/
@@ -25,7 +25,7 @@ INT26-6/
     ├── systemctl_disk_status.png
     ├── systemctl_ram_status.png
     └── systemct_log-watcher_status.png
-\`\`\`
+```
 
 ---
 
@@ -49,18 +49,18 @@ INT26-6/
 
 ### Виконані кроки на сервері:
 1. **Встановлення пакетів:**
-   \`\`\`bash
+   ```bash
    apt update
    apt install postfix mailutils opendkim opendkim-tools
-   \`\`\`
+   ```
    *(Під час встановлення Postfix обрано конфігурацію "Internet Site").*
 
 2. **Генерація та налаштування DKIM-ключів:**
-   \`\`\`bash
+   ```bash
    mkdir -p /etc/opendkim/keys/server.maksimecv.pp.ua
    opendkim-genkey -d server.maksimecv.pp.ua -D /etc/opendkim/keys/server.maksimecv.pp.ua -s mail
    chown -R opendkim:opendkim /etc/opendkim/keys/
-   \`\`\`
+   ```
 
 3. **Конфігурація OpenDKIM та Postfix:**
    - OpenDKIM налаштовано на прослуховування порту `inet:127.0.0.1:8891`.
@@ -93,17 +93,17 @@ INT26-6/
 
 **3. Як знайти директорію з найбільшою кількістю файлів?**
 Якщо багато вільного часу та не має бажання скористатись зручнішим варіантом, можна від / йти, використовуючи:
-\`\`\`bash
+```bash
 du --inodes -s /*
-\`\`\`
+```
 Або ж можна скористатися комбінацією команд `find`, `cut`, `sort` та `uniq`. Наприклад:
-\`\`\`bash
+```bash
 find /path/to/search -xdev -type f | cut -d "/" -f 1-2 | sort | uniq -c | sort -n
-\`\`\`
+```
 Або швидший варіант з використанням `find` та `wc` у циклі:
-\`\`\`bash
+```bash
 find / -xdev -type d -exec sh -c 'echo "$(find "$0" -maxdepth 1 | wc -l) $0"' {} \; | sort -rn | head -n 10
-\`\`\`
+```
 Загалом подібних рішень в інтернеті та в ШІшках дуже багато.
 
 ### Sticky Bit (див. `screenshots/sticky-bit.png`)
