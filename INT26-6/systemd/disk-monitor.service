@@ -1,0 +1,8 @@
+[Unit]
+Description=Disk Monitor Service
+
+[Service]
+Type=oneshot
+User=monitoruser
+Group=monitoruser
+ExecStart=/usr/local/src/disk_monitor.sh

@@ -1,0 +1,8 @@
+[Unit]
+Description=RAM Monitor Service
+
+[Service]
+Type=oneshot
+User=monitoruser
+Group=monitoruser
+ExecStart=/usr/local/src/ram_monitor.sh

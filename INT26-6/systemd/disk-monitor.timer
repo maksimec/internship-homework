@@ -1,0 +1,9 @@
+[Unit]
+Description=Disk Monitor Timer
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=Log Watcher Service
+After=network.target
+
+[Service]
+Type=simple
+User=monitoruser
+Group=monitoruser
+ExecStart=/usr/local/src/log_watcher.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
