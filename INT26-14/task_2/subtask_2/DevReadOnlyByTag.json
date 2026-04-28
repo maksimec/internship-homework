@@ -1,0 +1,49 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowEC2RDSDescribeGlobal",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:Describe*",
+                "rds:Describe*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "AllowS3ReadDevTagged",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:ListBucket"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/environment": "dev"
+                }
+            }
+        },
+        {
+            "Sid": "DenyAllProdTagged",
+            "Effect": "Deny",
+            "Action": "*",
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/environment": "prod"
+                }
+            }
+        },
+        {
+            "Sid": "AllowIAMAndCloudWatchGlobal",
+            "Effect": "Allow",
+            "Action": [
+                "iam:Get*",
+                "iam:List*",
+                "cloudwatch:Describe*"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
