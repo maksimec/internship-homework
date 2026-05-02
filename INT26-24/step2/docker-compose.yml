@@ -1,0 +1,212 @@
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:1.6
+    container_name: nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginx_conf:/etc/nginx/conf.d
+      - nginx_vhost:/etc/nginx/vhost.d
+      - nginx_html:/usr/share/nginx/html
+      - nginx_certs:/etc/nginx/certs:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  acme-companion:
+    image: nginxproxy/acme-companion:2.4
+    container_name: nginx-proxy-acme
+    restart: unless-stopped
+    environment:
+      DEFAULT_EMAIL: ${LETSENCRYPT_EMAIL}
+      NGINX_PROXY_CONTAINER: nginx-proxy
+    volumes:
+      - nginx_certs:/etc/nginx/certs:rw
+      - nginx_html:/usr/share/nginx/html
+      - acme:/etc/acme.sh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - nginx-proxy
+
+  bookstore-nginx:
+    image: nginx:1.30-alpine
+    container_name: bookstore-nginx
+    restart: unless-stopped
+    expose:
+      - "80"
+    environment:
+      VIRTUAL_HOST: ${BOOKSTORE_DOMAIN}
+      LETSENCRYPT_HOST: ${BOOKSTORE_DOMAIN}
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+    volumes:
+      - ./nginx/bookstore.conf:/etc/nginx/conf.d/default.conf:ro
+      - admin_public:/var/www/admin:ro
+    depends_on:
+      - frontend
+      - catalog-service
+      - order-service
+      - login-service
+      - admin-fpm
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: bookstore-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: bookstore-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  catalog-service:
+    image: ${REGISTRY_HOST}/bookstore/catalog-service:latest
+    container_name: catalog-service
+    restart: unless-stopped
+    expose:
+      - "${CATALOG_PORT}"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_ENABLED: "false"
+      PORT: ${CATALOG_PORT}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:${CATALOG_PORT}/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+
+  order-service:
+    image: ${REGISTRY_HOST}/bookstore/order-service:latest
+    container_name: order-service
+    restart: unless-stopped
+    expose:
+      - "${ORDER_PORT}"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      PORT: ${ORDER_PORT}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:${ORDER_PORT}/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+
+  login-service:
+    image: ${REGISTRY_HOST}/bookstore/login-service:latest
+    container_name: login-service
+    restart: unless-stopped
+    expose:
+      - "${AUTH_PORT}"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: ${AUTH_PORT}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:${AUTH_PORT}/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+
+  frontend:
+    image: ${REGISTRY_HOST}/bookstore/frontend:latest
+    container_name: frontend
+    restart: unless-stopped
+    expose:
+      - "${FRONTEND_PORT}"
+    environment:
+      PORT: ${FRONTEND_PORT}
+      CATALOG_SERVICE_URL: http://catalog-service:${CATALOG_PORT}
+      ORDER_SERVICE_URL: http://order-service:${ORDER_PORT}
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:${FRONTEND_PORT}/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+
+  admin-fpm:
+    image: ${REGISTRY_HOST}/bookstore/admin:latest
+    container_name: admin-fpm
+    restart: unless-stopped
+    expose:
+      - "9000"
+    environment:
+      CATALOG_SERVICE_URL: http://catalog-service:${CATALOG_PORT}
+      ORDER_SERVICE_URL: http://order-service:${ORDER_PORT}
+      LOGIN_SERVICE_URL: http://login-service:${AUTH_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM}
+      SESSION_SECRET: ${SESSION_SECRET}
+    volumes:
+      - admin_public:/var/www/shared
+    entrypoint: ["/bin/sh", "-c", "cp -r /var/www/admin/. /var/www/shared/ && php-fpm"]
+    depends_on:
+      - login-service
+    deploy:
+      resources:
+        limits:
+          memory: 96m
+
+  monitoring:
+    image: ${REGISTRY_HOST}/bookstore/monitoring:latest
+    container_name: monitoring
+    restart: unless-stopped
+    environment:
+      TZ: UTC
+    volumes:
+      - monitor_logs:/var/log/monitor
+      - /:/hostfs:ro
+      - /proc:/host_proc:ro
+
+volumes:
+  nginx_conf:
+  nginx_vhost:
+  nginx_html:
+  nginx_certs:
+  acme:
+  db_data:
+  admin_public:
+  monitor_logs:
