@@ -342,8 +342,8 @@ docker pull registry.maksimecv.pp.ua/bookstore/monitoring:latest
 git clone https://github.com/maksimec/platform-demo.git
 cd platform-demo && cp -a .env.example .env
 
-# Конкретні значення REGISTRY_HOST, REGISTRY_USERNAME, REGISTRY_PASSWORD,
-# BOOKSTORE_DOMAIN надано в особистих повідомленнях
+# Конкретні значення REGISTRY_HOST, REGISTRY_USERNAME, REGISTRY_PASSWORD
+# надано в особистих повідомленнях
 
 docker login $REGISTRY_HOST -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD
 docker compose pull
