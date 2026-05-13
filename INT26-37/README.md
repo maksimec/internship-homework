@@ -337,3 +337,4 @@ INT26-37/
     ├── inventory_list.png             # ansible-inventory --list
     └── idempotency_recap.png          # Повторний запуск — changed=0
 ```
+
