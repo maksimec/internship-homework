@@ -295,14 +295,14 @@ provisioner "local-exec" {
 AWS Console → Secrets Manager → Store a new secret:
 - Type: **Other type of secret**
 - Key: `password`, Value: `ChangeMeStrong123`
-- Secret name: `bookstore/app-secret`
+- Secret name: `bookstore-secret`
 
 ### 5.2 Import до Terraform state
 
 ```bash
 terraform import \\
   aws_secretsmanager_secret.db_password \\
-  arn:aws:secretsmanager:us-east-1:XXXXXXXXXXXX:secret:bookstore/app-secret-AbCdEf
+  arn:aws:secretsmanager:arn:aws:secretsmanager:us-east-1:XXXXXXXXXXXXXX:secret:bookstore-secret-yKI2jc
 ```
 
 Після import `terraform plan` показує `No changes`.
@@ -329,7 +329,7 @@ terraform state mv \\
 
 | Скріншот | Опис |
 |---|---|
-| ![secret created](step5/aws_sm_created_secret.png) | AWS Console — секрет `bookstore/app-secret` створений вручну |
+| ![secret created](step5/aws_sm_created_secret.png) | AWS Console — секрет `bookstore-secret` створений вручну |
 | ![terraform import](step5/terraform_import.png) | `terraform import` — `Import successful!` |
 | ![plan before mv](step5/terraform_plan_before_mv.png) | `terraform plan` після import, до mv — No changes |
 | ![state mv](step5/terraform_state_mv.png) | `terraform state mv` — Successfully moved 1 object(s) |
@@ -356,17 +356,9 @@ terraform validate
 
 S3 bucket для remote state захищений від випадкового видалення:
 
-```hcl
-lifecycle {
-  prevent_destroy = true
-}
-```
-
-Спроба `terraform destroy -target aws_s3_bucket.tf_state_protected` завершується помилкою.
-
 | Скріншот | Опис |
 |---|---|
-| ![prevent destroy](bonus/lifecycle_prevent_destroy.png) | `terraform destroy -target` — Error: prevent_destroy |
+| ![prevent destroy](bonus/lifecycle_prevent_destroy.png) | Вміст файлу `lifecycle.tf` |
 
 ### ⭐ `terraform destroy`
 
@@ -374,7 +366,7 @@ lifecycle {
 
 | Скріншот | Опис |
 |---|---|
-| ![destroy](bonus/terraform_destroy.png) | `terraform destroy` — Destroy complete |
+| ![destroy](bonus/terraform_destroy.png) | `terraform destroy` |
 
 ---
 
