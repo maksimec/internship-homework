@@ -89,8 +89,6 @@ sum(count_over_time({job="nginx",status="500"}[1m]))
 | ![dashboard_minreqtasks_combined_metrics](step2/dashboard_minreqtasks_combined_metrics.png) | Dashboard `INT26-57 - MinReqTasks`, комбінована metric-панель |
 | ![dashboard_addtasks_combined_logs](step2/dashboard_addtasks_combined_logs.png) | Dashboard `INT26-57 - AddTasks`, комбінована log-панель |
 
-| ![health check log](step4/health_check_log.png) | Лог `health-check` job — `curl /health` повертає 200 OK |
-
 ***
 
 ## Definition of Done
