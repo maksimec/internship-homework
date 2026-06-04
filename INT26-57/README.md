@@ -84,10 +84,12 @@ sum(count_over_time({job="nginx",status="500"}[1m]))
 
 | Скріншот | Опис |
 |---|---|
-| `step1/explore_mimir_combined_metrics.png` | Grafana Explore, datasource **Mimir**, metric-запити `sum(rate(nginx_http_requests_total[1m]))` та `avg(nginx_up)` |
-| `step1/explore_loki_combined_logs.png` | Grafana Explore, datasource **Loki**, log-based запити `100 * sum(count_over_time({job="nginx",status=~"5.."}[1m])) / sum(count_over_time({job="nginx"}[1m]))` та `sum(count_over_time({job="nginx",status="500"}[1m]))` |
-| `step2/dashboard_minreqtasks_combined_metrics.png` | Dashboard `INT26-57 - MinReqTasks`, комбінована metric-панель |
-| `step2/dashboard_addtasks_combined_logs.png` | Dashboard `INT26-57 - AddTasks`, комбінована log-панель |
+| ![explore_mimir_combined_metrics](step1/explore_mimir_combined_metrics.png) | Grafana Explore, datasource **Mimir**, metric-запити `sum(rate(nginx_http_requests_total[1m]))` та `avg(nginx_up)` |
+| ![explore_loki_combined_logs](step1/explore_loki_combined_logs.png) | Grafana Explore, datasource **Loki**, log-based запити `100 * sum(count_over_time({job="nginx",status=~"5.."}[1m])) / sum(count_over_time({job="nginx"}[1m]))` та `sum(count_over_time({job="nginx",status="500"}[1m]))` |
+| ![dashboard_minreqtasks_combined_metrics](step2/dashboard_minreqtasks_combined_metrics.png) | Dashboard `INT26-57 - MinReqTasks`, комбінована metric-панель |
+| ![dashboard_addtasks_combined_logs](step2/dashboard_addtasks_combined_logs.png) | Dashboard `INT26-57 - AddTasks`, комбінована log-панель |
+
+| ![health check log](step4/health_check_log.png) | Лог `health-check` job — `curl /health` повертає 200 OK |
 
 ***
 
