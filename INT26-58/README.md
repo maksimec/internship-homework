@@ -36,30 +36,6 @@ Alloy приймає OTLP-трейси від `tracegen` через `otelcol.rec
 - `prometheus.remote_write` — пуш згенерованих RED-метрик у Mimir.
 ***
  
-## Перевірка
- 
-### Tempo
- 
-```bash
-curl 'http://localhost:3200/api/search?limit=5'
-```
- 
-### Mimir
- 
-```promql
-traces_spanmetrics_calls_total
-```
- 
-```promql
-traces_spanmetrics_latency_count
-```
- 
-```promql
-sum(rate(traces_spanmetrics_calls_total{status_code="STATUS_CODE_ERROR"}[1m]))
-```
- 
-***
- 
 ## Дашборд
  
 ### `INT26-58`
@@ -68,22 +44,22 @@ sum(rate(traces_spanmetrics_calls_total{status_code="STATUS_CODE_ERROR"}[1m]))
  
 - **Request rate:**
 ```promql
-sum(rate(traces_spanmetrics_calls_total[1m]))
+sum(rate(traces_spanmetrics_calls_total[2m]))
 ```
  
 - **Error rate (%):**
 ```promql
 100 *
-sum(rate(traces_spanmetrics_calls_total{http_status_code=~"4..|5.."}[1m]))
+sum(rate(traces_spanmetrics_calls_total{http_status_code=~"4..|5.."}[2m]))
 /
-sum(rate(traces_spanmetrics_calls_total[1m]))
+sum(rate(traces_spanmetrics_calls_total[2m]))
 ```
  
 - **Average latency (ms):**
 ```promql
-sum(rate(traces_spanmetrics_latency_sum[1m]))
+sum(rate(traces_spanmetrics_latency_sum[2m]))
 /
-sum(rate(traces_spanmetrics_latency_count[1m]))
+sum(rate(traces_spanmetrics_latency_count[2m]))
 ```
  
 ***
